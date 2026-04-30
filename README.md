@@ -1,4 +1,6 @@
-**Binary Classification with a Bank Churn Dataset**
+*Binary Classification with a Bank Churn Dataset*
+
+
 This repository holds an attempt to apply a Random Forest classifier to predict customer churn using data from the Playground Series S4E1 Kaggle challenge.
 Overview
 The task, as defined by the Kaggle challenge, is to predict whether a bank customer will leave (churn) based on demographic and account information. This is a binary classification problem where the target variable Exited is 1 (churned) or 0 (stayed). The approach in this repository formulates the problem using a Random Forest classifier trained on 13 features including age, balance, credit score, geography, and account activity. Our best model achieved a ROC-AUC of 0.87 on the held-out test set. At the time of writing, the top score on the Kaggle leaderboard for this metric is approximately 0.92.
