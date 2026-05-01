@@ -1,93 +1,94 @@
-*Binary Classification with a Bank Churn Dataset*
+# Binary Classification with a Bank Churn Dataset
+
+**Project Link:** https://www.kaggle.com/competitions/playground-series-s4e1
+
+---
+
+## Define Project
+
+This Kaggle Playground challenge tasks participants with predicting whether a bank customer will churn (leave the bank) based on demographic and account data. It is a binary classification problem where the target variable `Exited` is encoded as 1 (churned) or 0 (stayed). The dataset is synthetically generated from a real bank churn dataset and contains approximately 165,000 training samples and 110,000 test samples with 13 features including age, account balance, credit score, geography, and account activity status. The evaluation metric is ROC-AUC.
+
+---
+
+## Data Loading and Initial Look
+
+- Training set: 165,034 rows, 14 columns (13 features + target)
+- Test set: 110,023 rows, 13 columns (no target)
+- No missing values found in any column
+
+| Feature | Type | Values/Range | Missing | Outliers |
+|---|---|---|---|---|
+| CreditScore | Numerical | 350 to 850 | 0 | Scores below 400 are rare but valid |
+| Age | Numerical | 18 to 92 | 0 | Values above 70 are rare |
+| Tenure | Numerical | 0 to 10 | 0 | None |
+| Balance | Numerical | 0 to 250,000 | 0 | Large spike at 0 |
+| NumOfProducts | Numerical | 1 to 4 | 0 | Values of 3 and 4 are very rare |
+| EstimatedSalary | Numerical | 0 to 200,000 | 0 | None |
+| HasCrCard | Categorical | 0, 1 | 0 | N/A |
+| IsActiveMember | Categorical | 0, 1 | 0 | N/A |
+| Geography | Categorical | France, Germany, Spain | 0 | N/A |
+| Gender | Categorical | Male, Female | 0 | N/A |
+
+Outlier definition: a data point more than 3 standard deviations from the mean for numerical features.
+
+Class imbalance: approximately 80% stayed (Exited=0) and 20% churned (Exited=1). The target is encoded as integers 0 and 1.
+
+---
+
+## Data Visualization
+
+**Plot 1: Overlapping histograms for numerical features (2x3 grid)**
+<img width="1486" height="790" alt="image" src="https://github.com/user-attachments/assets/05aad4a9-8314-4e20-be32-2337a6a3581c" />
 
 
-This repository holds an attempt to apply a Random Forest classifier to predict customer churn using data from the Playground Series S4E1 Kaggle challenge.
-Overview
-The task, as defined by the Kaggle challenge, is to predict whether a bank customer will leave (churn) based on demographic and account information. This is a binary classification problem where the target variable Exited is 1 (churned) or 0 (stayed). The approach in this repository formulates the problem using a Random Forest classifier trained on 13 features including age, balance, credit score, geography, and account activity. Our best model achieved a ROC-AUC of 0.87 on the held-out test set. At the time of writing, the top score on the Kaggle leaderboard for this metric is approximately 0.92.
+**Plot 2: Bar charts for categorical features (1x5 grid)**
+<img width="1790" height="390" alt="image" src="https://github.com/user-attachments/assets/6b14d15a-4fbd-41e8-a87a-c11f535b5245" />
 
-Summary of Workdone
-Data
+Key observations:
+- Age shows the strongest separation. Churned customers peak around age 40 to 50 while stayed customers peak around age 30.
+- NumOfProducts shows that customers with 3 or 4 products churn at an extremely high rate while customers with 2 products almost never churn.
+- IsActiveMember shows inactive members (0) churn at a disproportionately higher rate than active members.
+- Geography shows Germany has a notably higher churn rate proportionally despite having fewer total customers than France.
+- CreditScore, Tenure, and EstimatedSalary show nearly identical distributions between classes and are expected to contribute minimally to model performance.
 
-Type: Input: CSV file of numerical and categorical features. Output: binary flag Exited (1 = churned, 0 = stayed)
-Size: ~165,000 training rows, ~110,000 test rows, 13 features
-Split: 60% train (~99,000), 20% validation (~33,000), 20% test (~33,000). Kaggle test set (~110,000) used for final submission only.
+---
 
-Preprocessing / Cleanup
+## Data Cleaning and Preparation for Machine Learning
 
-Dropped identifier columns id, CustomerId, and Surname — no predictive signal
-One-hot encoded categorical features Geography (France/Germany/Spain) and Gender (Male/Female) using pd.get_dummies
-Applied StandardScaler to numerical features: CreditScore, Age, Tenure, Balance, NumOfProducts, EstimatedSalary. Scaler was fit only on training data and applied to validation, test, and Kaggle test sets to prevent data leakage.
-No missing values were found in the dataset.
+**Dropped columns:** `id`, `CustomerId`, `Surname` - these are row identifiers with no predictive signal.
 
-Data Visualization
-Histograms of each feature were plotted comparing churned vs stayed customers. Key findings:
+**One-hot encoding:** Applied `pd.get_dummies` to `Geography` and `Gender`, producing binary columns `Geography_France`, `Geography_Germany`, `Geography_Spain`, `Gender_Female`, `Gender_Male`.
 
-Age showed the strongest separation — churned customers tend to be older (peak 40–50) vs stayed (peak ~30)
-NumOfProducts — customers with 3–4 products churned at an extremely high rate; customers with 2 products almost never churned
-IsActiveMember — inactive members churned at a disproportionately higher rate
-Geography — Germany showed significantly higher churn rate proportionally despite fewer total customers
-CreditScore, Tenure, and EstimatedSalary showed little separation between classes and are expected to contribute minimally
+**Rescaling:** Applied `StandardScaler` to numerical features: CreditScore, Age, Tenure, Balance, NumOfProducts, EstimatedSalary. Random Forest does not strictly require scaling but it is applied as best practice. Scaler was fit only on training data and applied to validation, test, and Kaggle test sets to prevent data leakage.
 
-Problem Formulation
+**Visualization before and after scaling:** Plot histograms of the 6 numerical features before scaling (raw values) and after scaling (centered around 0, unit variance) side by side to confirm the transformation.
 
-Input: 13 features (after dropping identifiers and encoding categoricals: 16 columns total)
-Output: Probability of Exited = 1
-Model: Random Forest Classifier — chosen for its robustness to unscaled features, resistance to overfitting, and strong out-of-the-box performance on tabular data
-Hyperparameters: n_estimators=100, random_state=42
+---
 
-Training
+## Machine Learning
 
-Software: Python 3.14, scikit-learn, pandas, matplotlib
-Hardware: Local CPU (Apple Silicon), n_jobs=-1 to parallelize across cores
-Training time: Under 2 minutes
-Random Forest does not have training curves (loss vs epoch) as it is not an iterative gradient-based method — all 100 trees are built independently and the model stops once all trees are constructed
-No convergence issues or difficulties encountered
+### Problem Formulation
 
-Performance Comparison
+- Dropped `id`, `CustomerId`, `Surname` prior to modeling
+- Original categorical columns `Geography` and `Gender` dropped after one-hot encoding
+- Target `Exited` is already encoded as 0 and 1
+- Split: 60% train, 20% validation, 20% test using `train_test_split` with `random_state=42`
 
-Metric: ROC-AUC (area under the receiver operating characteristic curve) — standard for binary classification with class imbalance (~80/20 split)
+### Train ML Algorithm
 
-SplitROC-AUCValidation0.8800Test (held-out)0.8729
+Model: Random Forest Classifier with `n_estimators=100`, `random_state=42`. Chosen for strong out-of-the-box performance on tabular data and no requirement for feature scaling.
 
-Conclusions
+### Evaluate Performance on Validation Sample
 
-Random Forest is an effective baseline for this task, achieving 0.87 AUC with minimal tuning
-Age, NumOfProducts, and IsActiveMember are the most predictive features based on visual analysis
-The ~80/20 class imbalance did not require special handling for this model but could be addressed with techniques like SMOTE or class weighting for further improvement
+Metric: ROC-AUC score, which is the official Kaggle evaluation metric for this competition.
 
-Future Work
+| Split | ROC-AUC |
+|---|---|
+| Validation | 0.8800 |
+| Test (held-out) | 0.8729 |
 
-Try XGBoost or LightGBM which typically outperform Random Forest on tabular Kaggle competitions
-Address class imbalance explicitly using class_weight='balanced' or oversampling
-Feature engineering — e.g. interaction terms between Age and IsActiveMember
-Hyperparameter tuning via GridSearchCV
+Visualization: ROC curve plotted for the validation set showing true positive rate vs false positive rate across all thresholds.
 
+### Apply ML to the Challenge Test Set
 
-How to Reproduce Results
-
-Download train.csv and test.csv from the Kaggle competition page
-Place them in the same directory as the notebook
-Run notebook.ipynb top to bottom
-submission.csv will be generated in the working directory — upload to Kaggle for leaderboard score
-
-
-Overview of Files
-
-notebook.ipynb — single notebook containing all steps: data loading, EDA, preprocessing, training, evaluation, and submission generation
-train.csv — training data with labels (download from Kaggle)
-test.csv — Kaggle test set without labels (download from Kaggle)
-submission.csv — generated predictions for Kaggle submission
-
-
-Software Setup
-pandas
-numpy
-scikit-learn
-matplotlib
-Install with:
-pip install pandas numpy scikit-learn matplotlib
-
-Citations
-
-Kaggle Playground Series S4E1: https://www.kaggle.com/competitions/playground-series-s4e1
-Scikit-learn: Pedregosa et al., JMLR 12, pp. 2825–2830, 2011
+Model was applied to `test.csv` using `predict_proba` to generate churn probabilities. Output saved as `submission.csv` with columns `id` and `Exited` and uploaded to Kaggle for leaderboard scoring.
