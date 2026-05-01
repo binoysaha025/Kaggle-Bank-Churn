@@ -47,7 +47,8 @@ Performance Comparison
 
 Metric: ROC-AUC (area under the receiver operating characteristic curve) — standard for binary classification with class imbalance (~80/20 split)
 
-SplitROC-AUCValidation0.8800Test (held-out)0.8729Kaggle leaderboardTBD after submission
+SplitROC-AUCValidation0.8800Test (held-out)0.8729
+
 Conclusions
 
 Random Forest is an effective baseline for this task, achieving 0.87 AUC with minimal tuning
